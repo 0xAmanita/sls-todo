@@ -1,0 +1,22 @@
+{
+  "name": "todo-lambda",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "NODE_ENV=development ts-node index.ts",
+    "build": "node esbuild.config.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.635.0",
+    "@aws-sdk/lib-dynamodb": "^3.635.0",
+    "express": "^4.19.2",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "esbuild": "^0.23.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
