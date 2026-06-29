@@ -1,11 +1,11 @@
 const esbuild = require('esbuild');
 
+// @aws-sdk/* v3 is NOT pre-installed on Node 18 Lambda — it must be bundled.
 esbuild.build({
-  entryPoints: ['index.ts'],
+  entryPoints: ['src/handler.ts'],
   bundle: true,
   minify: true,
   platform: 'node',
   target: 'node18',
   outfile: 'build/index.js',
-  external: ['aws-sdk']
 }).catch(() => process.exit(1));
