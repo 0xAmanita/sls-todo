@@ -15,8 +15,9 @@ terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/.terraform.lock.hcl
-terraform/terraform.tfvars
-*.tfplan
+terraform/plan_output.txt
+terraform/deployment_info.txt
+terraform/terraform_outputs.env
 
 # Lambda zip
 *.zip
