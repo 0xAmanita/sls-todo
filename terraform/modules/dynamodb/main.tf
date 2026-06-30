@@ -15,13 +15,8 @@ resource "aws_dynamodb_table" "todos" {
 
   global_secondary_index {
     name            = "UserIdIndex"
+    hash_key        = "userId"
     projection_type = "ALL"
-
-    # Index Key Schema
-    key_schema {
-      attribute_name = "userId"
-      key_type           = "HASH"
-    }
   }
 
   tags = var.tags
