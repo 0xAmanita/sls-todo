@@ -59,8 +59,8 @@ jobs:
       api_endpoint: ${{ steps.tf-output.outputs.api_endpoint }}
       cognito_user_pool_id: ${{ steps.tf-output.outputs.cognito_user_pool_id }}
       cognito_user_pool_client_id: ${{ steps.tf-output.outputs.cognito_user_pool_client_id }}
-      s3_bucket_name: ${{ steps.tf-output.outputs.s3_bucket_name }}
-      s3_website_endpoint: ${{ steps.tf-output.outputs.s3_website_endpoint }}
+      amplify_app_url: ${{ steps.tf-output.outputs.amplify_app_url }}
+      amplify_app_id: ${{ steps.tf-output.outputs.amplify_app_id }}
     
     steps:
       - name: Checkout code
@@ -92,6 +92,10 @@ jobs:
           soft_fail: true
       
       - name: Deploy Infrastructure
+        env:
+          TF_VAR_github_repository: ${{ secrets.REPOSITORY_URL }}
+          TF_VAR_github_token: ${{ secrets.AMPLIFY_GITHUB_TOKEN }}
+          TF_VAR_github_branch: ${{ github.ref_name }}
         run: ./scripts/terraform-deploy.sh
       
       - name: Upload Terraform Plan
@@ -108,80 +112,21 @@ jobs:
           echo "api_endpoint=$(terraform output -raw api_endpoint)" >> $GITHUB_OUTPUT
           echo "cognito_user_pool_id=$(terraform output -raw cognito_user_pool_id)" >> $GITHUB_OUTPUT
           echo "cognito_user_pool_client_id=$(terraform output -raw cognito_user_pool_client_id)" >> $GITHUB_OUTPUT
-          echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          echo "s3_website_endpoint=$(terraform output -raw s3_website_endpoint)" >> $GITHUB_OUTPUT
+          echo "amplify_app_url=$(terraform output -raw amplify_app_url)" >> $GITHUB_OUTPUT
+          echo "amplify_app_id=$(terraform output -raw amplify_app_id)" >> $GITHUB_OUTPUT
 
-  deploy-frontend:
-    name: Build and Deploy Frontend
-    runs-on: ubuntu-latest
-    needs: terraform
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Create Terraform outputs file
-        working-directory: terraform
-        run: |
-          cat > terraform_outputs.env << EOF
-          API_ENDPOINT=${{ needs.terraform.outputs.api_endpoint }}
-          COGNITO_USER_POOL_ID=${{ needs.terraform.outputs.cognito_user_pool_id }}
-          COGNITO_USER_POOL_CLIENT_ID=${{ needs.terraform.outputs.cognito_user_pool_client_id }}
-          S3_BUCKET_NAME=${{ needs.terraform.outputs.s3_bucket_name }}
-          S3_WEBSITE_ENDPOINT=${{ needs.terraform.outputs.s3_website_endpoint }}
-          EOF
-      
-      - name: Deploy Frontend
-        run: ./scripts/deploy-frontend.sh
-      
-      - name: Health Check
-        run: ./scripts/health-check.sh
-        continue-on-error: true
-      
-      - name: Print deployment summary
-        if: success()
-        run: |
-          echo "Deployment Complete"
-          echo "=================="
-          echo "Frontend URL: http://${{ needs.terraform.outputs.s3_website_endpoint }}"
-          echo "API Endpoint: ${{ needs.terraform.outputs.api_endpoint }}"
-          echo "S3 Bucket: ${{ needs.terraform.outputs.s3_bucket_name }}"
-          echo "Cognito User Pool: ${{ needs.terraform.outputs.cognito_user_pool_id }}"
-          echo "Git Commit: ${{ github.sha }}"
-          echo "Deployed by: ${{ github.actor }}"
-      
-      - name: Deployment Failed - Notification
-        if: failure()
-        run: |
-          echo "Frontend Deployment Failed!"
-          echo "Check the logs above for detailed error information"
-          echo "You may need to rollback to the previous version"
-  
   notify:
     name: Send Deployment Notification
     runs-on: ubuntu-latest
-    needs: [build-lambda, terraform, deploy-frontend]
+    needs: [build-lambda, terraform]
     if: always()
     
     steps:
       - name: Check deployment status
         run: |
-          if [ "${{ needs.deploy-frontend.result }}" = "success" ]; then
+          if [ "${{ needs.terraform.result }}" = "success" ]; then
             echo "Full deployment pipeline succeeded"
+            echo "Amplify will auto-deploy frontend from GitHub"
             echo "STATUS=success" >> $GITHUB_ENV
           else
             echo "Deployment pipeline failed"
@@ -198,5 +143,9 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Actor: ${{ github.actor }}"
           echo "Workflow: ${{ github.workflow }}"
+          echo ""
+          echo "Frontend: Amplify will auto-deploy from this commit"
+          echo "API Endpoint: ${{ needs.terraform.outputs.api_endpoint }}"
+          echo "Amplify URL: ${{ needs.terraform.outputs.amplify_app_url }}"
           echo ""
           echo "In production, you would send this to Slack, Email, Teams, or PagerDuty"
