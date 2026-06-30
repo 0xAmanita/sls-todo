@@ -17,7 +17,7 @@ cd "$LAMBDA_DIR"
 
 # Install dependencies
 log_info "Installing Lambda dependencies..."
-npm ci
+rm -f package-lock.json && npm install
 
 # linting
 log_info "Running lint..."
