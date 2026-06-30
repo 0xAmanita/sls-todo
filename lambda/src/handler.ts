@@ -2,13 +2,35 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { createTodo, listTodos, getTodo, updateTodo, deleteTodo } from './todos';
 
 function getUserId(event: APIGatewayProxyEvent): string | null {
-  const claims = event.requestContext?.authorizer?.jwt?.claims;
-  return claims?.sub || null;
+  // API Gateway HTTP API v2 stores JWT claims in requestContext.authorizer.jwt.claims
+  // The authorizer property might need type assertion due to TypeScript definitions
+  const requestContext = event.requestContext as any;
+  const claims = requestContext?.authorizer?.jwt?.claims;
+  
+  if (!claims) {
+    console.log('No JWT claims found in request context');
+    return null;
+  }
+  
+  // The 'sub' claim contains the Cognito user ID
+  const sub = claims.sub;
+  console.log('Extracted userId (sub):', sub);
+  
+  return sub ? String(sub) : null;
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const { httpMethod: method, path } = event;
   const id = event.pathParameters?.id;
+  
+  // Log everything for debugging
+  console.log('=== REQUEST DEBUG ===');
+  console.log('Path:', path);
+  console.log('Method:', method);
+  console.log('Headers:', JSON.stringify(event.headers, null, 2));
+  console.log('RequestContext:', JSON.stringify(event.requestContext, null, 2));
+  console.log('===================');
+  
   const userId = getUserId(event);
 
   try {
