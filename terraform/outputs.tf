@@ -13,14 +13,19 @@ output "cognito_user_pool_client_id" {
   value       = module.cognito.user_pool_client_id
 }
 
-output "s3_bucket_name" {
-  description = "S3 bucket name for frontend"
-  value       = module.s3.bucket_name
+output "amplify_app_id" {
+  description = "Amplify App ID"
+  value       = module.amplify.app_id
 }
 
-output "s3_website_endpoint" {
-  description = "S3 website endpoint"
-  value       = module.s3.website_endpoint
+output "amplify_app_url" {
+  description = "Amplify App URL"
+  value       = module.amplify.app_url
+}
+
+output "amplify_default_domain" {
+  description = "Amplify default domain"
+  value       = module.amplify.default_domain
 }
 
 output "dynamodb_table_name" {
