@@ -13,19 +13,24 @@ output "cognito_user_pool_client_id" {
   value       = module.cognito.user_pool_client_id
 }
 
-output "amplify_app_id" {
-  description = "Amplify App ID"
-  value       = module.amplify.app_id
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket hosting the frontend"
+  value       = module.s3_cloudfront.bucket_name
 }
 
-output "amplify_app_url" {
-  description = "Amplify App URL"
-  value       = module.amplify.app_url
+output "cloudfront_distribution_id" {
+  description = "ID of the CloudFront distribution"
+  value       = module.s3_cloudfront.cloudfront_distribution_id
 }
 
-output "amplify_default_domain" {
-  description = "Amplify default domain"
-  value       = module.amplify.default_domain
+output "cloudfront_url" {
+  description = "URL of the CloudFront distribution"
+  value       = module.s3_cloudfront.cloudfront_url
+}
+
+output "cloudfront_domain_name" {
+  description = "Domain name of the CloudFront distribution"
+  value       = module.s3_cloudfront.cloudfront_domain_name
 }
 
 output "dynamodb_table_name" {
