@@ -2,10 +2,9 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { createTodo, listTodos, getTodo, updateTodo, deleteTodo } from './todos';
 
 function getUserId(event: APIGatewayProxyEvent): string | null {
-  // API Gateway HTTP API v2 stores JWT claims in requestContext.authorizer.jwt.claims
-  // The authorizer property might need type assertion due to TypeScript definitions
+  // API Gateway HTTP API v2 stores JWT claims in requestContext.authorizer.claims
   const requestContext = event.requestContext as any;
-  const claims = requestContext?.authorizer?.jwt?.claims;
+  const claims = requestContext?.authorizer?.claims;
   
   if (!claims) {
     console.log('No JWT claims found in request context');
