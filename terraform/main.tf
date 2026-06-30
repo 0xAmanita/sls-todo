@@ -18,10 +18,12 @@ module "lambda" {
 module "api_gateway" {
   source = "./modules/api_gateway"
 
-  api_name             = "${var.app_name}-${var.environment}"
-  lambda_invoke_arn    = module.lambda.invoke_arn
-  lambda_function_name = module.lambda.function_name
-  tags                 = local.common_tags
+  api_name                     = "${var.app_name}-${var.environment}"
+  lambda_invoke_arn            = module.lambda.invoke_arn
+  lambda_function_name         = module.lambda.function_name
+  cognito_user_pool_id         = module.cognito.user_pool_id
+  cognito_user_pool_client_id  = module.cognito.user_pool_client_id
+  tags                         = local.common_tags
 }
 
 module "cognito" {

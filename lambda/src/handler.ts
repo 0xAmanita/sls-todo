@@ -6,6 +6,24 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const id = event.pathParameters?.id;
 
   try {
+    // root path - API info
+    if (method === 'GET' && path === '/') {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'Todo API',
+          version: '1.0.0',
+          endpoints: {
+            'GET /todos': 'List all todos',
+            'POST /todos': 'Create a new todo',
+            'GET /todos/{id}': 'Get a specific todo',
+            'PUT /todos/{id}': 'Update a todo',
+            'DELETE /todos/{id}': 'Delete a todo',
+          },
+        }),
+      };
+    }
+
     if (method === 'POST'   && path === '/todos')        return await createTodo(event);
     if (method === 'GET'    && path === '/todos')        return await listTodos();
     if (method === 'GET'    && path.startsWith('/todos/')) return await getTodo(id!);

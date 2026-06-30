@@ -6,10 +6,27 @@ resource "aws_apigatewayv2_api" "api" {
     allow_origins = ["*"]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["*"]
+    expose_headers = ["*"]
   }
 
   tags = var.tags
 }
+
+# cognito JWT Authorizer
+resource "aws_apigatewayv2_authorizer" "cognito" {
+  count            = var.cognito_user_pool_id != "" ? 1 : 0
+  api_id           = aws_apigatewayv2_api.api.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "cognito-authorizer"
+
+  jwt_configuration {
+    audience = [var.cognito_user_pool_client_id]
+    issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${var.cognito_user_pool_id}"
+  }
+}
+
+data "aws_region" "current" {}
 
 resource "aws_apigatewayv2_integration" "lambda" {
   api_id           = aws_apigatewayv2_api.api.id
@@ -18,32 +35,49 @@ resource "aws_apigatewayv2_integration" "lambda" {
 }
 
 resource "aws_apigatewayv2_route" "post_todos" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /todos"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "POST /todos"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
+  authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
 resource "aws_apigatewayv2_route" "get_todos" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "GET /todos"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "GET /todos"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
+  authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
 resource "aws_apigatewayv2_route" "get_todo" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "GET /todos/{id}"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "GET /todos/{id}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
+  authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
 resource "aws_apigatewayv2_route" "put_todo" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "PUT /todos/{id}"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "PUT /todos/{id}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
+  authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
 resource "aws_apigatewayv2_route" "delete_todo" {
+  api_id             = aws_apigatewayv2_api.api.id
+  route_key          = "DELETE /todos/{id}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
+  authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+}
+
+# root path route for API info
+resource "aws_apigatewayv2_route" "root" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "DELETE /todos/{id}"
+  route_key = "GET /"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
