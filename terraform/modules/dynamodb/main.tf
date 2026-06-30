@@ -8,5 +8,11 @@ resource "aws_dynamodb_table" "todos" {
     type = "S"
   }
 
+  global_secondary_index {
+    name = "UserIdIndex"
+    hash_key = "userId"
+    projection_type = "ALL"
+  }
+
   tags = var.tags
 }

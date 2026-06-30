@@ -1,9 +1,15 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { createTodo, listTodos, getTodo, updateTodo, deleteTodo } from './todos';
 
+function getUserId(event: APIGatewayProxyEvent): string | null {
+  const claims = event.requestContext?.authorizer?.jwt?.claims;
+  return claims?.sub || null;
+}
+
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const { httpMethod: method, path } = event;
   const id = event.pathParameters?.id;
+  const userId = getUserId(event);
 
   try {
     // root path - API info
@@ -24,11 +30,19 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    if (method === 'POST'   && path === '/todos')        return await createTodo(event);
-    if (method === 'GET'    && path === '/todos')        return await listTodos();
-    if (method === 'GET'    && path.startsWith('/todos/')) return await getTodo(id!);
-    if (method === 'PUT'    && path.startsWith('/todos/')) return await updateTodo(id!, event);
-    if (method === 'DELETE' && path.startsWith('/todos/')) return await deleteTodo(id!);
+    // check userId
+    if(!userId) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({error: 'Unauthorized'})
+      };
+    }
+
+    if (method === 'POST'   && path === '/todos')        return await createTodo(event, userId);
+    if (method === 'GET'    && path === '/todos')        return await listTodos(userId);
+    if (method === 'GET'    && path.startsWith('/todos/')) return await getTodo(id!, userId);
+    if (method === 'PUT'    && path.startsWith('/todos/')) return await updateTodo(id!, event, userId);
+    if (method === 'DELETE' && path.startsWith('/todos/')) return await deleteTodo(id!, userId);
 
     return { statusCode: 404, body: JSON.stringify({ error: 'Not found' }) };
   } catch (err) {
