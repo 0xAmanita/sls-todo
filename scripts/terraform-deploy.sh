@@ -70,8 +70,9 @@ log_info "Extracting Terraform outputs..."
 API_ENDPOINT=$(terraform output -raw api_endpoint)
 COGNITO_USER_POOL_ID=$(terraform output -raw cognito_user_pool_id)
 COGNITO_USER_POOL_CLIENT_ID=$(terraform output -raw cognito_user_pool_client_id)
-AMPLIFY_APP_ID=$(terraform output -raw amplify_app_id)
-AMPLIFY_APP_URL=$(terraform output -raw amplify_app_url)
+S3_BUCKET_NAME=$(terraform output -raw s3_bucket_name)
+CLOUDFRONT_DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+CLOUDFRONT_URL=$(terraform output -raw cloudfront_url)
 LAMBDA_FUNCTION_NAME=$(terraform output -raw lambda_function_name)
 
 # export outputs for use by other scripts
@@ -79,8 +80,9 @@ cat > terraform_outputs.env << EOF
 API_ENDPOINT=$API_ENDPOINT
 COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID
 COGNITO_USER_POOL_CLIENT_ID=$COGNITO_USER_POOL_CLIENT_ID
-AMPLIFY_APP_ID=$AMPLIFY_APP_ID
-AMPLIFY_APP_URL=$AMPLIFY_APP_URL
+S3_BUCKET_NAME=$S3_BUCKET_NAME
+CLOUDFRONT_DISTRIBUTION_ID=$CLOUDFRONT_DISTRIBUTION_ID
+CLOUDFRONT_URL=$CLOUDFRONT_URL
 LAMBDA_FUNCTION_NAME=$LAMBDA_FUNCTION_NAME
 EOF
 

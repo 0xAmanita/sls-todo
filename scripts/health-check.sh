@@ -21,11 +21,11 @@ else
 fi
 
 # test frontend URL
-log_info "Testing frontend at: $AMPLIFY_APP_URL"
+log_info "Testing frontend at: $CLOUDFRONT_URL"
 
 FRONTEND_HEALTHY=false
 for i in $(seq 1 $MAX_RETRIES); do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$AMPLIFY_APP_URL" || echo "000")
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$CLOUDFRONT_URL" || echo "000")
   if [ "$HTTP_CODE" = "200" ]; then
     log_success "Frontend is accessible (HTTP $HTTP_CODE)"
     FRONTEND_HEALTHY=true
@@ -57,7 +57,7 @@ Health Check Summary
 Frontend: $([ "$FRONTEND_HEALTHY" = true ] && echo "HEALTHY" || echo "UNHEALTHY")
 API: $([ "$API_CODE" = "200" ] || [ "$API_CODE" = "401" ] && echo "HEALTHY" || echo "UNHEALTHY")
 
-Frontend URL: $AMPLIFY_APP_URL
+Frontend URL: $CLOUDFRONT_URL
 API Endpoint: $API_ENDPOINT/todos
 
 EOF
