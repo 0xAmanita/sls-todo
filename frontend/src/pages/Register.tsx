@@ -35,8 +35,8 @@ export default function Register() {
           }
         }
       });
-      setMessage('Registration successful! Please check your email to verify your account.');
-      setTimeout(() => navigate('/login'), 3000);
+      setMessage('Registration successful! Redirecting to verification...');
+      setTimeout(() => navigate('/confirm-email', { state: { email } }), 2000);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     }

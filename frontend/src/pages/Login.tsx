@@ -19,7 +19,13 @@ export default function Login() {
       });
       navigate('/todos');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      // Check if user is not confirmed
+      if (err.name === 'UserNotConfirmedException' || err.message?.includes('not confirmed')) {
+        setError('Please verify your email first. Redirecting...');
+        setTimeout(() => navigate('/confirm-email', { state: { email } }), 2000);
+      } else {
+        setError(err.message || 'Login failed');
+      }
     }
   };
 
