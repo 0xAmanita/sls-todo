@@ -109,6 +109,11 @@ jobs:
           working_directory: terraform
           soft_fail: true
       
+      - name: Clean up orphaned Terraform state
+        run: |
+          chmod +x ./scripts/cleanup-terraform-state.sh
+          ./scripts/cleanup-terraform-state.sh
+      
       - name: Deploy Infrastructure
         run: ./scripts/terraform-deploy.sh
       
