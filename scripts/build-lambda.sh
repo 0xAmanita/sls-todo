@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/utils.sh"
 
 LAMBDA_DIR="${LAMBDA_DIR:-lambda}"
 
-log_info "Starting Lambda function build..."
+log_info "Starting Lambda functions build..."
 
 # Check if Lambda directory exists
 check_dir_exists "$LAMBDA_DIR"
@@ -31,14 +31,18 @@ npx tsc --noEmit
 log_info "Running tests..."
 run_optional_script "test"
 
-# build Lambda function
-log_info "Building Lambda function..."
+# build Lambda functions
+log_info "Building Lambda functions..."
 npm run build
 
-log_info "Verifying Lambda build artifact..."
-check_file_exists "build/function.zip"
+log_info "Verifying Lambda build artifacts..."
+check_file_exists "build/createTodo.zip"
+check_file_exists "build/listTodos.zip"
+check_file_exists "build/getTodo.zip"
+check_file_exists "build/updateTodo.zip"
+check_file_exists "build/deleteTodo.zip"
 
-log_success "Lambda build artifact verified"
-ls -lh build/function.zip
+log_success "Lambda build artifacts verified:"
+ls -lh build/*.zip
 
-log_success "Lambda function build complete"
+log_success "Lambda functions build complete"
