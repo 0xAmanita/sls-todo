@@ -17,11 +17,26 @@ check_dir_exists "$TERRAFORM_DIR"
 # navigate to Terraform directory
 cd "$TERRAFORM_DIR"
 
-# check if Lambda artifact exists
-if [ ! -f "../lambda/build/function.zip" ]; then
-  log_error "Lambda artifact not found. Please build Lambda first."
+# check if Lambda artifacts exist
+log_info "Checking Lambda artifacts..."
+REQUIRED_LAMBDAS=("createTodo" "listTodos" "getTodo" "updateTodo" "deleteTodo")
+MISSING_ARTIFACTS=0
+
+for func in "${REQUIRED_LAMBDAS[@]}"; do
+  if [ ! -f "../lambda/build/${func}.zip" ]; then
+    log_error "Lambda artifact not found: ${func}.zip"
+    MISSING_ARTIFACTS=$((MISSING_ARTIFACTS + 1))
+  else
+    log_info "✓ Found ${func}.zip"
+  fi
+done
+
+if [ $MISSING_ARTIFACTS -gt 0 ]; then
+  log_error "Missing $MISSING_ARTIFACTS Lambda artifact(s). Please build Lambda functions first."
   exit 1
 fi
+
+log_success "All Lambda artifacts verified"
 
 # initialize Terraform
 log_info "Initializing Terraform..."
