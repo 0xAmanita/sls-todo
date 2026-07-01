@@ -103,12 +103,28 @@ EOF
 
 log_info "Terraform outputs saved to terraform_outputs.env"
 
-# test Lambda function deployment
-log_info "Testing Lambda function deployment..."
-if aws lambda get-function --function-name "$LAMBDA_FUNCTION_NAME" &> /dev/null; then
-  log_success "Lambda function verified: $LAMBDA_FUNCTION_NAME"
+# test Lambda function deployments
+log_info "Testing Lambda function deployments..."
+LAMBDA_FUNCTIONS=("create" "list" "get" "update" "delete")
+FAILED_VERIFICATIONS=0
+
+for func in "${LAMBDA_FUNCTIONS[@]}"; do
+  FUNCTION_NAME="$LAMBDA_FUNCTION_NAME"
+  # Replace 'create' with the actual function suffix if needed
+  FUNCTION_NAME="${FUNCTION_NAME%-create}-${func}"
+  
+  if aws lambda get-function --function-name "$FUNCTION_NAME" &> /dev/null; then
+    log_success "✓ Lambda function verified: $FUNCTION_NAME"
+  else
+    log_warning "✗ Lambda function verification failed: $FUNCTION_NAME"
+    FAILED_VERIFICATIONS=$((FAILED_VERIFICATIONS + 1))
+  fi
+done
+
+if [ $FAILED_VERIFICATIONS -eq 0 ]; then
+  log_success "All Lambda functions verified successfully"
 else
-  log_warning "Lambda function verification skipped"
+  log_warning "Some Lambda function verifications failed, but deployment completed"
 fi
 
 log_success "Terraform deployment complete"

@@ -39,6 +39,17 @@ output "dynamodb_table_name" {
 }
 
 output "lambda_function_name" {
-  description = "Lambda function name"
-  value       = module.lambda.function_name
+  description = "Lambda function name (create todo)"
+  value       = module.lambda_create_todo.function_name
+}
+
+output "lambda_function_names" {
+  description = "All Lambda function names"
+  value = {
+    create_todo = module.lambda_create_todo.function_name
+    list_todos  = module.lambda_list_todos.function_name
+    get_todo    = module.lambda_get_todo.function_name
+    update_todo = module.lambda_update_todo.function_name
+    delete_todo = module.lambda_delete_todo.function_name
+  }
 }
