@@ -33,30 +33,50 @@ resource "aws_apigatewayv2_integration" "create_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_create_todo_invoke_arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_apigatewayv2_integration" "list_todos" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_list_todos_invoke_arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_apigatewayv2_integration" "get_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_get_todo_invoke_arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_apigatewayv2_integration" "update_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_update_todo_invoke_arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_apigatewayv2_integration" "delete_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_delete_todo_invoke_arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Routes - each route points to its specific Lambda integration
@@ -66,6 +86,8 @@ resource "aws_apigatewayv2_route" "post_todos" {
   target             = "integrations/${aws_apigatewayv2_integration.create_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+
+  depends_on = [aws_apigatewayv2_integration.create_todo]
 }
 
 resource "aws_apigatewayv2_route" "get_todos" {
@@ -74,6 +96,8 @@ resource "aws_apigatewayv2_route" "get_todos" {
   target             = "integrations/${aws_apigatewayv2_integration.list_todos.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+
+  depends_on = [aws_apigatewayv2_integration.list_todos]
 }
 
 resource "aws_apigatewayv2_route" "get_todo" {
@@ -82,6 +106,8 @@ resource "aws_apigatewayv2_route" "get_todo" {
   target             = "integrations/${aws_apigatewayv2_integration.get_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+
+  depends_on = [aws_apigatewayv2_integration.get_todo]
 }
 
 resource "aws_apigatewayv2_route" "put_todo" {
@@ -90,6 +116,8 @@ resource "aws_apigatewayv2_route" "put_todo" {
   target             = "integrations/${aws_apigatewayv2_integration.update_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+
+  depends_on = [aws_apigatewayv2_integration.update_todo]
 }
 
 resource "aws_apigatewayv2_route" "delete_todo" {
@@ -98,6 +126,8 @@ resource "aws_apigatewayv2_route" "delete_todo" {
   target             = "integrations/${aws_apigatewayv2_integration.delete_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
+
+  depends_on = [aws_apigatewayv2_integration.delete_todo]
 }
 
 resource "aws_apigatewayv2_stage" "default" {
@@ -106,6 +136,14 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
 
   tags = var.tags
+
+  depends_on = [
+    aws_apigatewayv2_route.post_todos,
+    aws_apigatewayv2_route.get_todos,
+    aws_apigatewayv2_route.get_todo,
+    aws_apigatewayv2_route.put_todo,
+    aws_apigatewayv2_route.delete_todo
+  ]
 }
 
 # Lambda Permissions - one per function
