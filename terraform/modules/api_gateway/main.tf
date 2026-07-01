@@ -33,50 +33,30 @@ resource "aws_apigatewayv2_integration" "create_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_create_todo_invoke_arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_apigatewayv2_integration" "list_todos" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_list_todos_invoke_arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_apigatewayv2_integration" "get_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_get_todo_invoke_arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_apigatewayv2_integration" "update_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_update_todo_invoke_arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_apigatewayv2_integration" "delete_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = var.lambda_delete_todo_invoke_arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 # Routes - each route points to its specific Lambda integration
