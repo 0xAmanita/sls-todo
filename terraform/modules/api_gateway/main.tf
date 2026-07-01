@@ -12,7 +12,7 @@ resource "aws_apigatewayv2_api" "api" {
   tags = var.tags
 }
 
-# cognito JWT Authorizer
+# Cognito JWT Authorizer
 resource "aws_apigatewayv2_authorizer" "cognito" {
   count            = var.cognito_user_pool_id != "" ? 1 : 0
   api_id           = aws_apigatewayv2_api.api.id
@@ -28,16 +28,42 @@ resource "aws_apigatewayv2_authorizer" "cognito" {
 
 data "aws_region" "current" {}
 
-resource "aws_apigatewayv2_integration" "lambda" {
+# Lambda Integrations - one per function
+resource "aws_apigatewayv2_integration" "create_todo" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_invoke_arn
+  integration_uri  = var.lambda_create_todo_invoke_arn
 }
 
+resource "aws_apigatewayv2_integration" "list_todos" {
+  api_id           = aws_apigatewayv2_api.api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = var.lambda_list_todos_invoke_arn
+}
+
+resource "aws_apigatewayv2_integration" "get_todo" {
+  api_id           = aws_apigatewayv2_api.api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = var.lambda_get_todo_invoke_arn
+}
+
+resource "aws_apigatewayv2_integration" "update_todo" {
+  api_id           = aws_apigatewayv2_api.api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = var.lambda_update_todo_invoke_arn
+}
+
+resource "aws_apigatewayv2_integration" "delete_todo" {
+  api_id           = aws_apigatewayv2_api.api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = var.lambda_delete_todo_invoke_arn
+}
+
+# Routes - each route points to its specific Lambda integration
 resource "aws_apigatewayv2_route" "post_todos" {
   api_id             = aws_apigatewayv2_api.api.id
   route_key          = "POST /todos"
-  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  target             = "integrations/${aws_apigatewayv2_integration.create_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
@@ -45,7 +71,7 @@ resource "aws_apigatewayv2_route" "post_todos" {
 resource "aws_apigatewayv2_route" "get_todos" {
   api_id             = aws_apigatewayv2_api.api.id
   route_key          = "GET /todos"
-  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  target             = "integrations/${aws_apigatewayv2_integration.list_todos.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
@@ -53,7 +79,7 @@ resource "aws_apigatewayv2_route" "get_todos" {
 resource "aws_apigatewayv2_route" "get_todo" {
   api_id             = aws_apigatewayv2_api.api.id
   route_key          = "GET /todos/{id}"
-  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  target             = "integrations/${aws_apigatewayv2_integration.get_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
@@ -61,7 +87,7 @@ resource "aws_apigatewayv2_route" "get_todo" {
 resource "aws_apigatewayv2_route" "put_todo" {
   api_id             = aws_apigatewayv2_api.api.id
   route_key          = "PUT /todos/{id}"
-  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  target             = "integrations/${aws_apigatewayv2_integration.update_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
@@ -69,16 +95,9 @@ resource "aws_apigatewayv2_route" "put_todo" {
 resource "aws_apigatewayv2_route" "delete_todo" {
   api_id             = aws_apigatewayv2_api.api.id
   route_key          = "DELETE /todos/{id}"
-  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  target             = "integrations/${aws_apigatewayv2_integration.delete_todo.id}"
   authorization_type = var.cognito_user_pool_id != "" ? "JWT" : "NONE"
   authorizer_id      = var.cognito_user_pool_id != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
-}
-
-# root path route for API info
-resource "aws_apigatewayv2_route" "root" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "GET /"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
 resource "aws_apigatewayv2_stage" "default" {
@@ -89,10 +108,43 @@ resource "aws_apigatewayv2_stage" "default" {
   tags = var.tags
 }
 
-resource "aws_lambda_permission" "api_gateway" {
+# Lambda Permissions - one per function
+resource "aws_lambda_permission" "create_todo" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_function_name
+  function_name = var.lambda_create_todo_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "list_todos" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_list_todos_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "get_todo" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_get_todo_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "update_todo" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_update_todo_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "delete_todo" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_delete_todo_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }

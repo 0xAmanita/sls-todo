@@ -48,7 +48,7 @@ resource "aws_lambda_function" "function" {
   filename      = var.lambda_zip_path
   function_name = var.function_name
   role          = aws_iam_role.lambda_role.arn
-  handler       = "index.handler"
+  handler       = var.handler != "" ? var.handler : "${replace(basename(var.lambda_zip_path), ".zip", "")}.handler"
   runtime       = "nodejs18.x"
   timeout       = 30
 

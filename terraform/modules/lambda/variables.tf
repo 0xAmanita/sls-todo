@@ -3,6 +3,12 @@ variable "function_name" {
   type        = string
 }
 
+variable "handler" {
+  description = "Lambda handler (default: <filename>.handler)"
+  type        = string
+  default     = ""
+}
+
 variable "lambda_zip_path" {
   description = "Path to Lambda deployment zip"
   type        = string

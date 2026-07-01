@@ -26,7 +26,7 @@ env:
 
 jobs:
   build-lambda:
-    name: Build Lambda Function
+    name: Build Lambda Functions
     runs-on: ubuntu-latest
     
     steps:
@@ -40,14 +40,19 @@ jobs:
           cache: 'npm'
           cache-dependency-path: lambda/package-lock.json
       
-      - name: Build Lambda
+      - name: Build Lambda Functions
         run: ./scripts/build-lambda.sh
       
-      - name: Upload Lambda artifact
+      - name: List build artifacts
+        run: |
+          echo "Lambda build artifacts:"
+          ls -lh lambda/build/*.zip
+      
+      - name: Upload Lambda artifacts
         uses: actions/upload-artifact@v4
         with:
           name: lambda-build
-          path: lambda/build/function.zip
+          path: lambda/build/*.zip
           retention-days: 1
 
   terraform:
@@ -72,6 +77,18 @@ jobs:
         with:
           name: lambda-build
           path: lambda/build
+      
+      - name: Verify Lambda artifacts
+        run: |
+          echo "Verifying Lambda build artifacts..."
+          for func in createTodo listTodos getTodo updateTodo deleteTodo; do
+            if [ ! -f "lambda/build/${func}.zip" ]; then
+              echo "ERROR: Missing ${func}.zip"
+              exit 1
+            fi
+            echo "✓ Found ${func}.zip"
+          done
+          echo "All Lambda artifacts verified!"
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
